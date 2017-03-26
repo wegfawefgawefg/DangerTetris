@@ -6,6 +6,15 @@ function love.load()
   --  GLOBALS   --
   HALF_WIDTH = love.graphics.getWidth() / 2
   HALF_HEIGHT = love.graphics.getHeight() / 2
+  --  specs of squares that comprise polygons   --
+  square_width = 24
+  square_height = 24
+  half_square_width = square_width / 2
+  half_square_height = square_height / 2
+
+  --  MORE GLOBALS  --
+  NEW_TETROMINO_X = HALF_WIDTH
+  NEW_TETROMINO_Y = 2 * square_width
 
   whole_rotation = 360 -- in degrees
   dr = math.rad( whole_rotation / 4 )
@@ -18,38 +27,77 @@ function love.load()
   world = love.physics.newWorld( 0, 10 * meter, true )
   world:setCallbacks( beginContact, endContact, preSolve, postSolve )
 
-  --  specs of squares that comprise polygons   --
-  square_width = 24
-  square_height = 24
-  half_square_width = square_width / 2
-  half_square_height = square_height / 2
-
-  --  square center positions within polygon   --
+  --  container for all tetromino square positions  --
   tetromino_templates = {}
-  tetrromino__templates[1].squares =  {}
-  tetrromino__templates[1].squares[1] = { 0 * square_width + half_square_width, 0 * square_height + half_square_height }
-  tetrromino__templates[1].squares[2] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
-  tetrromino__templates[1].squares[3] = { 1 * square_width + half_square_width, 1 * square_height + half_square_height }
-  tetrromino__templates[1].squares[4] = { 1 * square_width + half_square_width, 2 * square_height + half_square_height }
-  table.insert( tetromino_templates, squares )
+  --  square center positions within tetromino one   --
+  tetromino_one =  {}
+  tetromino_one.squares = {}
+  tetromino_one.squares[1] = { 0 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_one.squares[2] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_one.squares[3] = { 2 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_one.squares[4] = { 3 * square_width + half_square_width, 0 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_one )
 
-  --  create one tetromino  --
-  tetromino = {}
-  tetromino.body = love.physics.newBody( world, HALF_WIDTH, HALF_HEIGHT, "dynamic" )
-  tetromino.shapes = {}
-  tetromino.fixtures = {}
-  tetromino.shapes[1] = love.physics.newRectangleShape( squares[1][1], squares[1][2], square_width, square_height )
-  tetromino.shapes[2] = love.physics.newRectangleShape( squares[2][1], squares[2][2], square_width, square_height )
-  tetromino.shapes[3] = love.physics.newRectangleShape( squares[3][1], squares[3][2], square_width, square_height )
-  tetromino.shapes[4] = love.physics.newRectangleShape( squares[4][1], squares[4][2], square_width, square_height )
-  tetromino.fixtures[1] = love.physics.newFixture( tetromino.body, tetromino.shapes[1], 1 )
-  tetromino.fixtures[2] = love.physics.newFixture( tetromino.body, tetromino.shapes[2], 1 )
-  tetromino.fixtures[3] = love.physics.newFixture( tetromino.body, tetromino.shapes[3], 1 )
-  tetromino.fixtures[4] = love.physics.newFixture( tetromino.body, tetromino.shapes[4], 1 )
+  --  square center positions within tetromino one   --
+  tetromino_two = {}
+  tetromino_two.squares =  {}
+  tetromino_two.squares[1] = { 0 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_two.squares[2] = { 1 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_two.squares[3] = { 2 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_two.squares[4] = { 2 * square_width + half_square_width, 0 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_two )
+
+  --  square center positions within tetromino one   --
+  tetromino_three = {}
+  tetromino_three.squares =  {}
+  tetromino_three.squares[1] = { 0 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_three.squares[2] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_three.squares[3] = { 2 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_three.squares[4] = { 2 * square_width + half_square_width, 1 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_three )
+
+  --  square center positions within tetromino one   --
+  tetromino_four = {}
+  tetromino_four.squares =  {}
+  tetromino_four.squares[1] = { 0 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_four.squares[2] = { 0 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_four.squares[3] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_four.squares[4] = { 1 * square_width + half_square_width, 1 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_four )
+
+  --  square center positions within tetromino one   --
+  tetromino_five = {}
+  tetromino_five.squares =  {}
+  tetromino_five.squares[1] = { 0 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_five.squares[2] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_five.squares[3] = { 1 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_five.squares[4] = { 2 * square_width + half_square_width, 1 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_five )
+
+  --  square center positions within tetromino one   --
+  tetromino_six = {}
+  tetromino_six.squares =  {}
+  tetromino_six.squares[1] = { 0 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_six.squares[2] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_six.squares[3] = { 1 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_six.squares[4] = { 2 * square_width + half_square_width, 1 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_six )
+
+  --  square center positions within tetromino one   --
+  tetromino_seven = {}
+  tetromino_seven.squares =  {}
+  tetromino_seven.squares[1] = { 0 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_seven.squares[2] = { 1 * square_width + half_square_width, 1 * square_height + half_square_height }
+  tetromino_seven.squares[3] = { 1 * square_width + half_square_width, 0 * square_height + half_square_height }
+  tetromino_seven.squares[4] = { 2 * square_width + half_square_width, 0 * square_height + half_square_height }
+  table.insert( tetromino_templates, tetromino_seven )
 
   --  this is where new tetrominos go   --
   tetrominos = {}
+  active_tetromino = love.physics.newBody( world, -50, -50, "dynamic" )
+  newTetromino()
 
+  --  this is where walls go  --
   walls = {}
   --  create left wall  --
   left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width
@@ -90,17 +138,18 @@ function love.update( dt )
 end
 
 function love.draw()
-  tetromino_dx, tetromino_dy = tetromino.body:getLinearVelocity()
+  tetromino_dx, tetromino_dy = active_tetromino.body:getLinearVelocity()
   love.graphics.print( "speed: " .. tostring( tetromino_dx ) .. ", " .. tostring( tetromino_dy ), 0, 0 )
-  drawTetromino()
+  drawAllTetrominos()
   drawBoundaries()
 end
 
-function drawTetromino()
+function drawAllTetrominos()
   love.graphics.setColor( 255, 255, 255 )
-  --  draw all shapes in tetromino  --
-  for i = 1, #tetromino.shapes do
-    love.graphics.polygon( "fill", tetromino.body:getWorldPoints( tetromino.shapes[i]:getPoints() ) )
+  for t = 1, #tetrominos do
+    for s = 1, 4 do
+      love.graphics.polygon( "fill", tetrominos[t].body:getWorldPoints( tetrominos[t].shapes[s]:getPoints() ) )
+    end
   end
 end
 
@@ -112,33 +161,49 @@ function drawBoundaries()
 end
 
 function newTetromino()
+  --  pick a random number between 1 and the number of tetromino templates  --
+  math.randomseed( os.time() )
+  math.random(); math.random(); math.random();
+  tetromino_type = math.random( 1, #tetromino_templates )
+
   new_tetromino = {}
   new_tetromino.body = love.physics.newBody( world, NEW_TETROMINO_X, NEW_TETROMINO_Y, "dynamic" )
   new_tetromino.shapes = {}
   new_tetromino.fixtures = {}
-  tetrominos.shapes[1] = love.physics.newRectangleShape( squares[1][1], squares[1][2], square_width, square_height )
-  tetromino.shapes[2] = love.physics.newRectangleShape( squares[2][1], squares[2][2], square_width, square_height )
-  tetromino.shapes[3] = love.physics.newRectangleShape( squares[3][1], squares[3][2], square_width, square_height )
-  tetromino.shapes[4] = love.physics.newRectangleShape( squares[4][1], squares[4][2], square_width, square_height )
-  tetromino.fixtures[1] = love.physics.newFixture( tetromino.body, tetromino.shapes[1], 1 )
-  tetromino.fixtures[2] = love.physics.newFixture( tetromino.body, tetromino.shapes[2], 1 )
-  tetromino.fixtures[3] = love.physics.newFixture( tetromino.body, tetromino.shapes[3], 1 )
-  tetromino.fixtures[4] = love.physics.newFixture( tetromino.body, tetromino.shapes[4], 1 )
+  for i = 1, 4 do
+    local new_tetromino_x = tetromino_templates[tetromino_type].squares[i][1]
+    local new_tetromino_y = tetromino_templates[tetromino_type].squares[i][2]
+    new_tetromino.shapes[i] = love.physics.newRectangleShape( new_tetromino_x, new_tetromino_y, square_width, square_height )
+    new_tetromino.fixtures[i] = love.physics.newFixture( new_tetromino.body, new_tetromino.shapes[i], 1 )
+  end
   table.insert( tetrominos, new_tetromino )
+  active_tetromino = new_tetromino
 end
+
 --  CONTROLS  --
 function checkKeyPresses( dt )
   if love.keyboard.isDown( "up" ) then
-    tetromino.body:setLinearVelocity( 0, dy )
+    active_tetromino.body:setLinearVelocity( 0, dy )
   end
   if love.keyboard.isDown( "down" ) then
-    tetromino.body:setLinearVelocity( 0, -dy )
+    active_tetromino.body:setLinearVelocity( 0, -dy )
   end
   if love.keyboard.isDown( "left" ) then
-    tetromino.body:setAngularVelocity( -dr )
+    active_tetromino.body:setAngularVelocity( -dr )
   end
   if love.keyboard.isDown( "right" ) then
-    tetromino.body:setAngularVelocity( dr )
+    active_tetromino.body:setAngularVelocity( dr )
+  end
+  --[[
+  if love.keyboard.isDown( "space" ) then
+    newTetromino()
+  end
+  ]]
+end
+
+function love.keypressed( key )
+  if( key == "space" ) then
+    newTetromino()
   end
 end
 
