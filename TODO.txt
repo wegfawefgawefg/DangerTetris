@@ -1,0 +1,15 @@
+-add templates for all tetrominos
+-add a big tetromino holder
+-add spawning
+-add controlling
+-add temporary controlling for last created object
+-add end condition if any of the tallest objects are touching another tetromino AND the ceiling
+-tweak physics
+-add debug log in the background
+-add a timer
+-add main menu 
+-add conditions and states
+-add fun win words and lose words
+
+-add online score storing ???
+-or add online vs mode?
