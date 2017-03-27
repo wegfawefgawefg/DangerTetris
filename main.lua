@@ -94,16 +94,15 @@ function love.load()
 
   --  this is where new tetrominos go   --
   tetrominos = {}
-  active_tetromino = 0
-  newTetromino()
+  active_tetromino = 1
 
   --  this is where walls go  --
   walls = {}
   --  create left wall  --
-  left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width - 8
-  left_wall_y = 20 / 2 * square_width + half_square_width
   left_wall_width = square_width
   left_wall_height = 21 * square_height
+  left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width - 8
+  left_wall_y = 23 * square_width - left_wall_height / 2 + half_square_width
   walls[1] = {}
   walls[1].body = love.physics.newBody( world, left_wall_x, left_wall_y, "static" )
   walls[1].shape = love.physics.newRectangleShape( left_wall_width, left_wall_height )
@@ -111,10 +110,10 @@ function love.load()
   walls[1].fixture:setUserData( "left_wall" )
 
   --  create right wall   --
-  right_wall_x = HALF_WIDTH + 5 * square_width + half_square_width
-  right_wall_y = 20 / 2 * square_width + half_square_width
   right_wall_width = square_width
   right_wall_height = 21 * square_height
+  right_wall_x = HALF_WIDTH + 5 * square_width + half_square_width
+  right_wall_y = 23 * square_width - right_wall_height / 2 + half_square_width
   walls[2] = {}
   walls[2].body = love.physics.newBody( world, right_wall_x, right_wall_y, "static" )
   walls[2].shape = love.physics.newRectangleShape( right_wall_width, right_wall_height )
@@ -122,15 +121,24 @@ function love.load()
   walls[2].fixture:setUserData( "right_wall" )
 
   --  create floor  --
-  floor_x = HALF_WIDTH
-  floor_y = 20 * square_width + half_square_width
   floor_width = 12 * square_width
   floor_height = square_height
+  floor_x = HALF_WIDTH
+  floor_y = 23 * square_width - floor_height / 2 + half_square_width
   walls[3] = {}
   walls[3].body = love.physics.newBody( world, floor_x, floor_y, "static" )
   walls[3].shape = love.physics.newRectangleShape( floor_width, floor_height )
   walls[3].fixture = love.physics.newFixture( walls[3].body, walls[3].shape, 1 )
   walls[3].fixture:setUserData( "floor" )
+
+  --  bar --
+  bar_width = 11 * square_width
+  bar_height = square_width
+  bar_x = HALF_WIDTH - bar_width / 2
+  bar_y = 10 * square_width - bar_height / 2 - 5
+  bar_r = 255
+  bar_g = 0
+  bar_b = 0
 
   --  MENUS AND TEXT CONFIGING  --
   score_font_size = 20
@@ -208,6 +216,16 @@ function love.load()
   gameTimerStarted = false
   gameOutroTimerStarted = false
 
+  new_tetromino_timer_started = false
+  initial_time_until_new_tetromino = 10 + 1
+  time_until_new_tetromino = 0
+  time_until_new_tetromino_text = love.graphics.newText( score_font, "" )
+  time_until_new_tetromino_text_x = 30
+  time_until_new_tetromino_text_y = 30
+
+  score_text = love.graphics.newText( score_font, "" )
+  score_text_x = 30
+  score_text_y = 60
   --  collision callback debug text   --
   collision_text = ""
   persisting = 0
@@ -217,7 +235,6 @@ end
 
 function love.update( dt )
   world:update( dt )
-  checkKeyPresses( dt )
 
   	if inMainMenu then
   		showMainMenu = true
@@ -245,11 +262,16 @@ function love.update( dt )
   		end
   	end
   	if gameInProgress then
+      checkKeyPresses( dt )
+      score_text:set( "points  " .. tostring( #tetrominos ) )
   		if gameTimerStarted == false then
   			gameTimerStarted = true
   			gameTimeRemaining = gameTime
-  			showGameTimeRemaining = true
   		end
+      if new_tetromino_timer_started == false then
+        new_tetromino_timer_started = true
+        time_until_new_tetromino = initial_time_until_new_tetromino
+      end
   		gameTimeRemaining = gameTimeRemaining - dt
   		game_time_text:set( tostring( math.floor( gameTimeRemaining ) ) )
   		if gameTimeRemaining <= 0 then
@@ -257,6 +279,12 @@ function love.update( dt )
   			determineWinner()
   			isEndOfGame = true
   		end
+      time_until_new_tetromino = time_until_new_tetromino - dt
+      time_until_new_tetromino_text:set( tostring( math.floor( time_until_new_tetromino ) ) )
+      if time_until_new_tetromino <= 1 then
+        newTetromino()
+        time_until_new_tetromino = initial_time_until_new_tetromino
+      end
   	end
   	if isEndOfGame then
   		prepareGameOutro()
@@ -277,17 +305,20 @@ function love.update( dt )
   		showGameElements = false
   	end
 
-  	if string.len( collision_text ) > love.graphics.getHeight() then
+  	if string.len( collision_text ) > ( love.graphics.getHeight() * 2 ) then
           collision_text = ""
       end
 end
 
 function love.draw()
-  	love.graphics.setColor( 100, 100, 100, 100 )
+  	love.graphics.setColor( 255, 255, 255, 100 )
   	love.graphics.print(collision_text, 10, 10)
 
   	if showGameElements then
   		drawGameTimeText()
+      drawTimeUntilNewTetromino()
+      drawScoreText()
+      drawBar()
       drawAllTetrominos()
       drawBoundaries()
   	end
@@ -309,12 +340,35 @@ function drawAllTetrominos()
   for t = 1, #tetrominos do
   	love.graphics.setColor( 255, 255, 255 )
   	if t == active_tetromino then
-  		love.graphics.setColor( 255, 0, 0 )
+  		love.graphics.setColor( 0, 0, 255 )
   	end
     for s = 1, 4 do
       love.graphics.polygon( "fill", tetrominos[t].body:getWorldPoints( tetrominos[t].shapes[s]:getPoints() ) )
     end
   end
+end
+
+function drawBar()
+  love.graphics.setColor( bar_r, bar_g, bar_b )
+  love.graphics.rectangle( "fill", bar_x, bar_y, bar_width, bar_height )
+end
+
+function drawScoreText()
+  love.graphics.setColor( 255, 255, 255 )
+  love.graphics.draw( score_text, score_text_x, score_text_y )
+end
+
+function drawTimeUntilNewTetromino()
+  love.graphics.setColor( 255, 255, 255 )
+  local scale_x = 1
+  local scale_y = 1
+  if time_until_new_tetromino <= 4 then
+    local redness = time_until_new_tetromino - math.floor( time_until_new_tetromino ) * 255
+    love.graphics.setColor( 255, redness, redness )
+    scale_x = 4 - time_until_new_tetromino + 1
+    scale_y = 4 - time_until_new_tetromino + 1
+  end
+  love.graphics.draw( time_until_new_tetromino_text, time_until_new_tetromino_text_x, time_until_new_tetromino_text_y, 0, scale_x, scale_y )
 end
 
 function drawBoundaries()
@@ -328,7 +382,7 @@ function newTetromino()
   --  pick a random number between 1 and the number of tetromino templates  --
   math.randomseed( os.time() )
   math.random(); math.random(); math.random();
-  tetromino_type = math.random( 1, #tetromino_templates )
+  tetromino_type =  4 -- math.random( 1, #tetromino_templates )
 
   new_tetromino = {}
   new_tetromino.body = love.physics.newBody( world, NEW_TETROMINO_X, NEW_TETROMINO_Y, "dynamic" )
@@ -348,10 +402,10 @@ end
 --  CONTROLS  --
 function checkKeyPresses( dt )
   if love.keyboard.isDown( "up" ) then
-  	tetrominos[active_tetromino].body:setLinearVelocity( 0, dy )
+  	tetrominos[active_tetromino].body:setLinearVelocity( 0, -dy )
   end
   if love.keyboard.isDown( "down" ) then
-    tetrominos[active_tetromino].body:setLinearVelocity( 0, -dy )
+    tetrominos[active_tetromino].body:setLinearVelocity( 0, dy )
   end
   if love.keyboard.isDown( "left" ) then
     tetrominos[active_tetromino].body:setAngularVelocity( -dr )
@@ -362,8 +416,9 @@ function checkKeyPresses( dt )
 end
 
 function love.keypressed( key )
-  if( key == "space" ) then
+  if( key == "space" and ( gameInProgress == true ) and ( time_until_new_tetromino < 8 ) ) then
     newTetromino()
+    time_until_new_tetromino = initial_time_until_new_tetromino
   end
   if( key == "2" ) then
   	changeActiveTetromino( 1 )
@@ -414,8 +469,8 @@ end
 
 function changeActiveTetromino( direction )
 	active_tetromino = active_tetromino + direction
-	if active_tetromino < 0 then
-		active_tetromino = 0
+	if active_tetromino < 1 then
+		active_tetromino = 1
 	end
 	if active_tetromino >= #tetrominos then
 		active_tetromino = #tetrominos
