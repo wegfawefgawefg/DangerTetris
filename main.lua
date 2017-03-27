@@ -94,13 +94,13 @@ function love.load()
 
   --  this is where new tetrominos go   --
   tetrominos = {}
-  active_tetromino = love.physics.newBody( world, -50, -50, "dynamic" )
+  active_tetromino = 0
   newTetromino()
 
   --  this is where walls go  --
   walls = {}
   --  create left wall  --
-  left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width
+  left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width - 8
   left_wall_y = 20 / 2 * square_width + half_square_width
   left_wall_width = square_width
   left_wall_height = 21 * square_height
@@ -138,15 +138,18 @@ function love.update( dt )
 end
 
 function love.draw()
-  tetromino_dx, tetromino_dy = active_tetromino.body:getLinearVelocity()
+  --tetromino_dx, tetromino_dy = active_tetromino.body:getLinearVelocity()
   love.graphics.print( "speed: " .. tostring( tetromino_dx ) .. ", " .. tostring( tetromino_dy ), 0, 0 )
   drawAllTetrominos()
   drawBoundaries()
 end
 
 function drawAllTetrominos()
-  love.graphics.setColor( 255, 255, 255 )
   for t = 1, #tetrominos do
+  	love.graphics.setColor( 255, 255, 255 )
+  	if t == active_tetromino then
+  		love.graphics.setColor( 255, 0, 0 )
+  	end
     for s = 1, 4 do
       love.graphics.polygon( "fill", tetrominos[t].body:getWorldPoints( tetrominos[t].shapes[s]:getPoints() ) )
     end
@@ -177,23 +180,32 @@ function newTetromino()
     new_tetromino.fixtures[i] = love.physics.newFixture( new_tetromino.body, new_tetromino.shapes[i], 1 )
   end
   table.insert( tetrominos, new_tetromino )
-  active_tetromino = new_tetromino
+  active_tetromino = active_tetromino + 1
 end
 
 --  CONTROLS  --
 function checkKeyPresses( dt )
+	--tdx = dx * dt
+	--tdy = dy * dt
+	--tdr = dr * dt
+
   if love.keyboard.isDown( "up" ) then
-    active_tetromino.body:setLinearVelocity( 0, dy )
+  	tetrominos[active_tetromino].body:setLinearVelocity( 0, dy )
+    --moveAllTetrominos( 0, -tdy, 0 )
   end
   if love.keyboard.isDown( "down" ) then
-    active_tetromino.body:setLinearVelocity( 0, -dy )
+    tetrominos[active_tetromino].body:setLinearVelocity( 0, -dy )
+    --moveAllTetrominos( 0, tdy, 0 )
   end
   if love.keyboard.isDown( "left" ) then
-    active_tetromino.body:setAngularVelocity( -dr )
+    tetrominos[active_tetromino].body:setAngularVelocity( -dr )
+    --moveAllTetrominos( 0, 0, -tdr )
   end
   if love.keyboard.isDown( "right" ) then
-    active_tetromino.body:setAngularVelocity( dr )
+    tetrominos[active_tetromino].body:setAngularVelocity( dr )
+    --moveAllTetrominos( 0, 0, tdr )
   end
+
   --[[
   if love.keyboard.isDown( "space" ) then
     newTetromino()
@@ -201,10 +213,41 @@ function checkKeyPresses( dt )
   ]]
 end
 
+--[[
+function moveAllTetrominos( dx, dy, dr )
+	for i = 1, #tetrominos do
+		local cdx, cdy = tetrominos[i].body:getLinearVelocity()
+		local cdr = tetrominos[i].body:getAngularVelocity()
+		local ndx = cdx + dx
+		local ndy = cdy + dy
+		local ndr = cdr + dr
+
+		tetrominos[i].body:setLinearVelocity( ndx, ndy )
+		tetrominos[i].body:setAngularVelocity( ndr )
+	end
+end
+]]
+
 function love.keypressed( key )
   if( key == "space" ) then
     newTetromino()
   end
+  if( key == "2" ) then
+  	changeActiveTetromino( 1 )
+  end
+  if( key == "1" ) then
+  	changeActiveTetromino( -1 )
+  end
+end
+
+function changeActiveTetromino( direction )
+	active_tetromino = active_tetromino + direction
+	if active_tetromino < 0 then
+		active_tetromino = 0
+	end
+	if active_tetromino >= #tetrominos then
+		active_tetromino = #tetrominos
+	end
 end
 
 function beginContact()
