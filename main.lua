@@ -94,13 +94,13 @@ function love.load()
 
   --  this is where new tetrominos go   --
   tetrominos = {}
-  active_tetromino = love.physics.newBody( world, -50, -50, "dynamic" )
+  active_tetromino = 0
   newTetromino()
 
   --  this is where walls go  --
   walls = {}
   --  create left wall  --
-  left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width
+  left_wall_x = HALF_WIDTH - 6 * square_width + half_square_width - 8
   left_wall_y = 20 / 2 * square_width + half_square_width
   left_wall_width = square_width
   left_wall_height = 21 * square_height
@@ -108,6 +108,7 @@ function love.load()
   walls[1].body = love.physics.newBody( world, left_wall_x, left_wall_y, "static" )
   walls[1].shape = love.physics.newRectangleShape( left_wall_width, left_wall_height )
   walls[1].fixture = love.physics.newFixture( walls[1].body, walls[1].shape, 1 )
+  walls[1].fixture:setUserData( "left_wall" )
 
   --  create right wall   --
   right_wall_x = HALF_WIDTH + 5 * square_width + half_square_width
@@ -118,6 +119,7 @@ function love.load()
   walls[2].body = love.physics.newBody( world, right_wall_x, right_wall_y, "static" )
   walls[2].shape = love.physics.newRectangleShape( right_wall_width, right_wall_height )
   walls[2].fixture = love.physics.newFixture( walls[2].body, walls[2].shape, 1 )
+  walls[2].fixture:setUserData( "right_wall" )
 
   --  create floor  --
   floor_x = HALF_WIDTH
@@ -128,6 +130,87 @@ function love.load()
   walls[3].body = love.physics.newBody( world, floor_x, floor_y, "static" )
   walls[3].shape = love.physics.newRectangleShape( floor_width, floor_height )
   walls[3].fixture = love.physics.newFixture( walls[3].body, walls[3].shape, 1 )
+  walls[3].fixture:setUserData( "floor" )
+
+  --  MENUS AND TEXT CONFIGING  --
+  score_font_size = 20
+  score_font = love.graphics.newFont( "/Resources/Fonts/8bw.ttf", score_font_size )
+
+  --  timeRemaining timer   --
+  gameTimeRemaining = 0
+  showGameTimeRemaining = false
+  game_time_text_x = love.graphics.getWidth() / 2
+  game_time_text_y = love.graphics.getHeight() * 1 / 10
+  game_time_text = love.graphics.newText( score_font, tostring( gameTimeRemaining ) )
+
+  --	make main menu button press text object 	--
+  title_prefixes = {}
+  table.insert( title_prefixes, "Regular" )
+  table.insert( title_prefixes, "Inconspicuous" )
+  table.insert( title_prefixes, "Normal" )
+  table.insert( title_prefixes, "" )
+  table.insert( title_prefixes, "Danger" )
+  table.insert( title_prefixes, "Plain old" )
+  table.insert( title_prefixes, "Insubordinate" )
+  table.insert( title_prefixes, "Hazard" )
+  table.insert( title_prefixes, "Unfortunate" )
+
+  title_prefix = ""
+  title_postfix = " Tetris"
+
+	--	make title prefix text object 	--
+	title_prefix_text = love.graphics.newText( score_font, title_prefix )
+	title_prefix_text_x = love.graphics.getWidth() *  3 / 10
+	title_prefix_text_y = love.graphics.getHeight() * 2 / 10
+
+	--	make title postfix text object 	--
+	title_postfix_text = love.graphics.newText( score_font, title_postfix )
+	title_postfix_text_x = love.graphics.getWidth() *  4 / 10
+	title_postfix_text_y = love.graphics.getHeight() * 2 / 10 + score_font_size
+
+		--	make main menu text object 	--
+	main_menu_button_press_text = love.graphics.newText( score_font, "press return" )
+	main_menu_button_press_text_x = love.graphics.getWidth() *  4 / 10
+	main_menu_button_press_text_y = love.graphics.getHeight() * 7 / 10
+
+		--	make game begin player text object 	--
+	game_intro_text = love.graphics.newText( score_font, "GameBEGIN" )
+	game_intro_text_x = love.graphics.getWidth() *  3 / 10
+	game_intro_text_y = love.graphics.getHeight() * 2 / 10
+
+  --	make game outro text 	--
+  winner_text = love.graphics.newText( score_font, "" )
+  loser_text = love.graphics.newText( score_font, "" )
+
+  winner_text_color_r = 0
+  winner_text_color_g = 0
+  winner_text_color_b = 0
+
+  loser_text_color_r = 0
+  loser_text_color_g = 0
+  loser_text_color_b = 0
+
+  inMainMenu = true
+  isStartOfNewGame = false
+  isNewGame = false
+  gameInProgress = false
+  gameWon = false
+
+  gameIntroTime = 1
+  gameOutroTime = 1
+  gameTime = 60 * 10
+
+  gameIntroTimeRemaining = 0
+  gameTimeRemaining = 0
+  gameOutroTimeRemaining = 0
+
+  gameIntroTimerStarted = false
+  gameTimerStarted = false
+  gameOutroTimerStarted = false
+
+  --  collision callback debug text   --
+  collision_text = ""
+  persisting = 0
 
 
 end
@@ -135,18 +218,99 @@ end
 function love.update( dt )
   world:update( dt )
   checkKeyPresses( dt )
+
+  	if inMainMenu then
+  		showMainMenu = true
+  		if cleanedUp == false then
+  			resetAll()
+  			cleanedUp = true
+  		end
+  	end
+  	if isStartOfNewGame then
+  		showGameIntro = true
+  		if gameIntroTimerStarted == false then
+  			gameIntroTimerStarted = true
+  			gameIntroTimeRemaining = gameIntroTime
+  		end
+  		gameTimeRemaining = 0
+  		gameTimerStarted = false
+  		showGameElements = true
+  		gameIntroTimeRemaining = gameIntroTimeRemaining - dt
+  		if gameIntroTimeRemaining <= 0 then
+  			isStartOfNewGame = false
+  			showGameIntro = false
+  			gameInProgress = true
+  			showGameIntro = false
+  			newTetromino()
+  		end
+  	end
+  	if gameInProgress then
+  		if gameTimerStarted == false then
+  			gameTimerStarted = true
+  			gameTimeRemaining = gameTime
+  			showGameTimeRemaining = true
+  		end
+  		gameTimeRemaining = gameTimeRemaining - dt
+  		game_time_text:set( tostring( math.floor( gameTimeRemaining ) ) )
+  		if gameTimeRemaining <= 0 then
+  			gameInProgress = false
+  			determineWinner()
+  			isEndOfGame = true
+  		end
+  	end
+  	if isEndOfGame then
+  		prepareGameOutro()
+  		showGameOutro = true
+  		if gameOutroTimerStarted == false then
+  			gameOutroTimerStarted = true
+  			gameOutroTimeRemaining = gameOutroTime
+  		end
+  		gameOutroTimeRemaining = gameOutroTimeRemaining - dt
+  		if gameOutroTimeRemaining <= 0 then
+  			isEndOfGame = false
+  			showGameOutro = false
+  			cleanedUp = false
+  			inMainMenu = true
+  		end
+  		inGame = false
+  		showGameTimeRemaining = false
+  		showGameElements = false
+  	end
+
+  	if string.len( collision_text ) > love.graphics.getHeight() then
+          collision_text = ""
+      end
 end
 
 function love.draw()
-  tetromino_dx, tetromino_dy = active_tetromino.body:getLinearVelocity()
-  love.graphics.print( "speed: " .. tostring( tetromino_dx ) .. ", " .. tostring( tetromino_dy ), 0, 0 )
-  drawAllTetrominos()
-  drawBoundaries()
+  	love.graphics.setColor( 100, 100, 100, 100 )
+  	love.graphics.print(collision_text, 10, 10)
+
+  	if showGameElements then
+  		drawGameTimeText()
+      drawAllTetrominos()
+      drawBoundaries()
+  	end
+  	if showMainMenu then
+  		drawMainMenu()
+  	end
+  	if showGameIntro then
+  		drawGameIntro()
+  	end
+  	if showGameOutro then
+  		drawGameOutro()
+  	end
+  	if showRoundIntro then
+  		drawRoundIntro()
+  	end
 end
 
 function drawAllTetrominos()
-  love.graphics.setColor( 255, 255, 255 )
   for t = 1, #tetrominos do
+  	love.graphics.setColor( 255, 255, 255 )
+  	if t == active_tetromino then
+  		love.graphics.setColor( 255, 0, 0 )
+  	end
     for s = 1, 4 do
       love.graphics.polygon( "fill", tetrominos[t].body:getWorldPoints( tetrominos[t].shapes[s]:getPoints() ) )
     end
@@ -175,46 +339,206 @@ function newTetromino()
     local new_tetromino_y = tetromino_templates[tetromino_type].squares[i][2]
     new_tetromino.shapes[i] = love.physics.newRectangleShape( new_tetromino_x, new_tetromino_y, square_width, square_height )
     new_tetromino.fixtures[i] = love.physics.newFixture( new_tetromino.body, new_tetromino.shapes[i], 1 )
+    new_tetromino.fixtures[i]:setUserData( "tetromino_num: " .. tostring( #tetrominos + 1 ) .. ", block: " .. tostring(i) )
   end
   table.insert( tetrominos, new_tetromino )
-  active_tetromino = new_tetromino
+  active_tetromino = #tetrominos
 end
 
 --  CONTROLS  --
 function checkKeyPresses( dt )
   if love.keyboard.isDown( "up" ) then
-    active_tetromino.body:setLinearVelocity( 0, dy )
+  	tetrominos[active_tetromino].body:setLinearVelocity( 0, dy )
   end
   if love.keyboard.isDown( "down" ) then
-    active_tetromino.body:setLinearVelocity( 0, -dy )
+    tetrominos[active_tetromino].body:setLinearVelocity( 0, -dy )
   end
   if love.keyboard.isDown( "left" ) then
-    active_tetromino.body:setAngularVelocity( -dr )
+    tetrominos[active_tetromino].body:setAngularVelocity( -dr )
   end
   if love.keyboard.isDown( "right" ) then
-    active_tetromino.body:setAngularVelocity( dr )
+    tetrominos[active_tetromino].body:setAngularVelocity( dr )
   end
-  --[[
-  if love.keyboard.isDown( "space" ) then
-    newTetromino()
-  end
-  ]]
 end
 
 function love.keypressed( key )
   if( key == "space" ) then
     newTetromino()
   end
+  if( key == "2" ) then
+  	changeActiveTetromino( 1 )
+  end
+  if( key == "1" ) then
+  	changeActiveTetromino( -1 )
+  end
+  if ( key == "return" ) then
+    if inMainMenu then
+      inMainMenu = false
+      showMainMenu = false
+      isStartOfNewGame = true
+    end
+  end
 end
 
-function beginContact()
+
+function resetAll()
+	gameIntroTimeRemaining = 0
+	gameIntroTimeRemaining = 0
+	gameTimeRemaining = 0
+	gameOutroTimeRemaining = 0
+
+	deleteAllTetrominos()
+	resetScore()
+
+	gameOutroTimerStarted = false
+	showGameElements = false
+
+	randomizeName()
 end
 
-function endContact()
+function drawMainMenu()
+	love.graphics.setColor( 255, 0, 0 )
+	love.graphics.draw( title_prefix_text, title_prefix_text_x, title_prefix_text_y )
+	love.graphics.setColor( 255, 255, 255 )
+	love.graphics.draw( title_postfix_text, title_postfix_text_x, title_postfix_text_y )
+	love.graphics.setColor( 100, 100, 100 )
+	love.graphics.draw( main_menu_button_press_text, main_menu_button_press_text_x, main_menu_button_press_text_y )
 end
 
-function preSolve()
+function resetScore()
+	left_player_score = 0
+	right_player_score = 0
+	left_player_score_text:set( tostring(0) )
+	right_player_score_text:set( tostring(0) )
 end
 
-function postSolve()
+function changeActiveTetromino( direction )
+	active_tetromino = active_tetromino + direction
+	if active_tetromino < 0 then
+		active_tetromino = 0
+	end
+	if active_tetromino >= #tetrominos then
+		active_tetromino = #tetrominos
+	end
+end
+
+function deleteAllTetrominos()
+  tetrominos = {}
+end
+
+function prepareGameOutro()
+	winner_text:set( string.upper( winner ) .. " WINS" )
+	loser_text:set( string.upper( loser ) .. " SUCKS" )
+
+	winner_text_color_r = 0
+	winner_text_color_g = 0
+	winner_text_color_b = 0
+
+	loser_text_color_r = 0
+	loser_text_color_g = 0
+	loser_text_color_b = 0
+
+	if winner == "red" then
+		winner_text_x, winner_text_y = objects.left_paddle.body:getWorldCenter()
+		winner_text_y = winner_text_y
+
+		winner_text_color_r = 255
+		winner_text_color_g = 0
+		winner_text_color_b = 0
+	elseif winner == "blue" then
+		winner_text_x, winner_text_y = objects.right_paddle.body:getWorldCenter()
+		winner_text_y = winner_text_y
+
+		winner_text_color_r = 0
+		winner_text_color_g = 0
+		winner_text_color_b = 255
+	elseif winner == "nobody" then
+		winner_text_x = love.graphics.getWidth() / 2
+		winner_text_y = love.graphics.getHeight() * 4 / 10
+
+		winner_text_color_r = 255
+		winner_text_color_g = 255
+		winner_text_color_b = 255
+	end
+
+	if loser == "red" then
+		loser_text_x, loser_text_y = objects.left_paddle.body:getWorldCenter()
+		loser_text_y = loser_text_y
+
+		loser_text_color_r = 255
+		loser_text_color_g = 0
+		loser_text_color_b = 0
+	elseif loser == "blue" then
+		loser_text_x, loser_text_y = objects.right_paddle.body:getWorldCenter()
+		loser_text_y = loser_text_y
+
+		loser_text_color_r = 0
+		loser_text_color_g = 0
+		loser_text_color_b = 255
+	elseif loser == "everyone" then
+		loser_text_x = love.graphics.getWidth() / 2
+		loser_text_y = love.graphics.getHeight() * 7 / 10
+
+		loser_text_color_r = 255
+		loser_text_color_g = 0
+		loser_text_color_b = 255
+	end
+end
+
+function drawGameIntro()
+	love.graphics.draw( game_intro_text, game_intro_text_x, game_intro_text_y )
+end
+
+function drawGameOutro()
+	--	draw winner message	--
+	love.graphics.setColor( winner_text_color_r, winner_text_color_g, winner_text_color_b )
+	love.graphics.draw( winner_text, winner_text_x, winner_text_y )
+
+	--	draw loser message 	--
+	love.graphics.setColor( loser_text_color_r, loser_text_color_g, loser_text_color_b )
+	love.graphics.draw( loser_text, loser_text_x, loser_text_y )
+end
+
+function drawGameTimeText()
+	love.graphics.setColor( 255, 255, 255 )
+	love.graphics.draw( game_time_text, game_time_text_x, game_time_text_y )
+end
+
+function beginContact( a, b, coll )
+    local x, y = coll:getNormal()
+    collision_text = collision_text.."\n"..a:getUserData().." colliding with "..b:getUserData().." with a vector normal of: "..x..", "..y
+end
+
+function endContact( a, b, coll )
+  persisting = 0
+  collision_text = collision_text.."\n"..a:getUserData().." uncolliding with "..b:getUserData()
+end
+
+function preSolve( a, b, coll )
+    if persisting == 0 then    -- only say when they first start touching
+        collision_text = collision_text.."\n"..a:getUserData().." touching "..b:getUserData()
+    elseif persisting < 20 then    -- then just start counting
+        collision_text = collision_text.." "..persisting
+    end
+    persisting = persisting + 1    -- keep track of how many updates they've been touching for
+end
+
+function postSolve( a, b, coll, normalimpulse, tangentimpulse )
+end
+
+function randomizeName()
+	--	select a prefix at random 	--
+	math.randomseed(os.time())
+	math.random(); math.random(); math.random()
+
+	title_prefix = title_prefixes[ math.random( 1, #title_prefixes ) ]
+
+	title_postfix = " Tetris"
+	--	small chance of Dong instead of pong 	--
+	if( love.math.random() <= 0.1 ) then
+		title_postfix = " Teet-ris"
+	end
+
+	title_prefix_text:set( title_prefix )
+	title_postfix_text:set( title_postfix )
 end
