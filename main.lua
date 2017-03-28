@@ -188,16 +188,13 @@ function love.load()
 	game_intro_text_y = love.graphics.getHeight() * 2 / 10
 
   --	make game outro text 	--
-  winner_text = love.graphics.newText( score_font, "" )
-  loser_text = love.graphics.newText( score_font, "" )
+  winner_text = love.graphics.newText( score_font, winner_text_string )
+  winner_text_x = HALF_WIDTH  - ( winner_text:getWidth() / 2 )
+  winner_text_y = HALF_HEIGHT
 
   winner_text_color_r = 0
-  winner_text_color_g = 0
+  winner_text_color_g = 255
   winner_text_color_b = 0
-
-  loser_text_color_r = 0
-  loser_text_color_g = 0
-  loser_text_color_b = 0
 
   inMainMenu = true
   isStartOfNewGame = false
@@ -369,7 +366,9 @@ function love.draw()
   	love.graphics.print(collision_text, 10, 10)
 
   	if showGameElements then
-  		--drawGameTimeText()
+      if showGameOutro then
+        drawGameOutro()
+      end
       drawScoreText()
       drawBar()
       drawAllTetrominos()
@@ -382,9 +381,6 @@ function love.draw()
   	end
   	if showGameIntro then
   		drawGameIntro()
-  	end
-  	if showGameOutro then
-  		drawGameOutro()
   	end
   	if showRoundIntro then
   		drawRoundIntro()
@@ -564,12 +560,17 @@ function deleteAllTetrominos()
 end
 
 function prepareGameOutro()
+  winner_text:set( "YOU WIN" )
   --if score above some point win_quality = " WIN PERFECTLY"
+  if score >= 1500 then
+    winner_text:set( "YOU ARE A GOD" )
+  end
   --if score below some point win_quality = " ARE PRETTY OKAY AT THIS"
+  if score then
+  end
   --if score below some point win_quality = " SUCK"
   --if score below some point win_quality = " ARE GARBAGE"
-  win_quality = " WIN"
-	winner_text:set( "YOU " .. win_quality )
+  end
 end
 
 function drawGameIntro()
@@ -578,6 +579,7 @@ end
 
 function drawGameOutro()
 	--	draw winner message	--
+  winner_text_x = HALF_WIDTH  - ( winner_text:getWidth() / 2 )
 	love.graphics.setColor( winner_text_color_r, winner_text_color_g, winner_text_color_b )
 	love.graphics.draw( winner_text, winner_text_x, winner_text_y )
 end
