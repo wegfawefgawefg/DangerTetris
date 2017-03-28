@@ -365,6 +365,9 @@ function love.draw()
   	love.graphics.setColor( 255, 255, 255, 100 )
   	love.graphics.print(collision_text, 10, 10)
 
+    love.graphics.print( "CONTROLS ", love.graphics.getWidth() * 15 / 20, love.graphics.getHeight() * 17 / 20 + square_width )
+    love.graphics.print( "space, up, down, left, right", love.graphics.getWidth() * 15 / 20, love.graphics.getHeight() * 17 / 20 + score_font:getHeight() + square_width )
+
   	if showGameElements then
       drawBar()
       drawBoundaries()

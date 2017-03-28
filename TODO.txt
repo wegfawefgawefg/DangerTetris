@@ -8,17 +8,17 @@ DONE:
 -add conditions and states
 -add temporary controlling for last created object
 -add debug log in the background
-
-TODO:
 -add end condition ( the bar )
-  -check for collision with bar by any of the uncontrolled tetrominos
-  -end game if that happens
+-check for collision with bar by any of the uncontrolled tetrominos
+-end game if that happens
 -add scoring
-  -max points from tetrominos is 30. make them worth like 50 each
-  -make time aspect of score start at 500 but go down every second
-  -score is total of time aspect and tetromino points
-  -make bad score and good score thresholds
+-max points from tetrominos is 30. make them worth like 50 each
+-make time aspect of score start at 500 but go down every second
+-score is total of time aspect and tetromino points
+-make bad score and good score thresholds
 -add fun win words and lose words
 -tweak physics
+
+TODO:
 -add online score storing ???
 -or add online vs mode?
