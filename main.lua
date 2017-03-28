@@ -366,13 +366,13 @@ function love.draw()
   	love.graphics.print(collision_text, 10, 10)
 
   	if showGameElements then
+      drawBar()
+      drawBoundaries()
       if showGameOutro then
         drawGameOutro()
       end
       drawScoreText()
-      drawBar()
       drawAllTetrominos()
-      drawBoundaries()
       drawTimeUntilNewTetromino()
   	end
   	if showMainMenu then
@@ -447,7 +447,7 @@ function newTetromino()
   --  pick a random number between 1 and the number of tetromino templates  --
   math.randomseed( os.time() )
   math.random(); math.random(); math.random();
-  tetromino_type =  4 -- math.random( 1, #tetromino_templates )
+  tetromino_type = math.random( 1, #tetromino_templates )
 
   new_tetromino = {}
   new_tetromino.body = love.physics.newBody( world, NEW_TETROMINO_X, NEW_TETROMINO_Y, "dynamic" )
@@ -561,15 +561,17 @@ end
 
 function prepareGameOutro()
   winner_text:set( "YOU WIN" )
-  --if score above some point win_quality = " WIN PERFECTLY"
-  if score >= 1500 then
+  if score >= 1700 then
     winner_text:set( "YOU ARE A GOD" )
   end
-  --if score below some point win_quality = " ARE PRETTY OKAY AT THIS"
-  if score then
+  if score <= 1600 then
+    winner_text:set( "MEDIOCRE" )
   end
-  --if score below some point win_quality = " SUCK"
-  --if score below some point win_quality = " ARE GARBAGE"
+  if score < 800 then
+    winner_text:set( "YOU ARE GARBAGE" )
+  end
+  if score <= 300 then
+    winner_text:set( "HOW THE FUCK?" )
   end
 end
 
